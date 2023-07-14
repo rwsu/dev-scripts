@@ -305,6 +305,15 @@ case "${AGENT_E2E_TEST_BOOT_MODE}" in
       disable_automated_installation
     fi
 
+    sudo virt-xml ostest_master_0 --remove-device --network bridge=ostestbm,model=virtio
+    sudo virt-xml ostest_master_1 --remove-device --network bridge=ostestbm,model=virtio
+    sudo virt-xml ostest_master_2 --remove-device --network bridge=ostestbm,model=virtio
+    sudo virt-xml ostest_master_0 --add-device --network bridge=ostestbm,model=virtio,mac=00:00:00:00:00:01
+    sudo virt-xml ostest_master_0 --add-device --network bridge=ostestbm,model=virtio,mac=00:00:00:00:00:02
+    sudo virt-xml ostest_master_1 --add-device --network bridge=ostestbm,model=virtio,mac=00:00:00:00:01:01
+    sudo virt-xml ostest_master_1 --add-device --network bridge=ostestbm,model=virtio,mac=00:00:00:00:01:02
+    sudo virt-xml ostest_master_2 --add-device --network bridge=ostestbm,model=virtio,mac=00:00:00:00:02:01
+    sudo virt-xml ostest_master_2 --add-device --network bridge=ostestbm,model=virtio,mac=00:00:00:00:02:02
     attach_agent_iso master $NUM_MASTERS
     attach_agent_iso worker $NUM_WORKERS
     ;;
