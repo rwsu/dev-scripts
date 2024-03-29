@@ -25,7 +25,6 @@ function wrap_if_ipv6(){
     echo "$1"
 }
 
-export VIPS_SEPARATOR=","
 export PATH_CONF_DNSMASQ="/etc/NetworkManager/dnsmasq.d/openshift-${CLUSTER_NAME}.conf"
 
 export IP_STACK=${IP_STACK:-"v6"}

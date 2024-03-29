@@ -38,3 +38,24 @@ if [[ $NUM_MASTERS == 1 && $IP_STACK == "v6" ]]; then
     sudo sed -i "/${AGENT_NODE0_IPSV6} oauth-openshift.apps.${CLUSTER_DOMAIN}/d" /etc/hosts
     sudo sed -i "/${AGENT_NODE0_IPSV6} thanos-querier-openshift-monitoring.apps.${CLUSTER_DOMAIN}/d" /etc/hosts
 fi
+
+if [[ "${NODES_PLATFORM}" == "vsphere" ]]; then
+    set +x
+    export GOVC_URL=$VSPHERE_VCENTER_SERVER
+    export GOVC_USERNAME=$VSPHERE_VCENTER_USERNAME
+    export GOVC_PASSWORD=$VSPHERE_VCENTER_PASSWORD
+    export GOVC_INSECURE=true
+    export GOVC_DATASTORE=$VSPHERE_FAILUREDOMAIN_DATASTORE_PATH
+    export ISO="iso/${VSPHERE_VCENTER_USERNAME}/agent.x86_64.iso"
+    set -x
+
+    set +e
+    for node in ${AGENT_NODES_HOSTNAMES//,/ }
+    do
+        govc vm.destroy $node
+    done
+
+    govc datastore.rm -ds $GOVC_DATASTORE $ISO 
+    govc datastore.rm -ds $GOVC_DATASTORE "iso/${VSPHERE_VCENTER_USERNAME}" 
+    set -e
+fi

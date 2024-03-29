@@ -45,3 +45,17 @@ if [[ "${MIRROR_COMMAND}" == oc-mirror ]]; then
       rm -f ${oc_mirror_file}
    fi
 fi
+
+if [[ "${AGENT_PLATFORM_TYPE}" == "vsphere" ]]; then
+
+   govc_file=govc_Linux_x86_64.tar.gz
+   govc_exec=govc
+   if [[ ! -f "/usr/local/bin/govc" ]]; then
+      curl -O -L https://github.com/vmware/govmomi/releases/latest/download/${govc_file}
+      tar xzf ${govc_file} ${govc_exec}
+      chmod +x ${govc_exec}
+      sudo mv -f ${govc_exec} /usr/local/bin
+      rm -f ${govc_file}
+   fi
+   govc version
+fi

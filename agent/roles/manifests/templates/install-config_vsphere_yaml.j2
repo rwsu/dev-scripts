@@ -51,22 +51,22 @@ platform:
   vsphere:
     vcenters:
     - datacenters:
-      - testDatacenter
-      password: testPassword
-      server: vcenter.test.com
-      user: testUser@vcenter.test.com
+      - {{ vsphere_vcenter_datacenter }}
+      server: {{ vsphere_vcenter_server }}
+      user: {{ vsphere_vcenter_username }}
+      password: {{ vsphere_vcenter_password }}
     failuredomains:
-    - name: test-failure-baseDomain
-      server: vcenter.test.com
-      region: testRegion
+    - name: {{ vsphere_failuredomain_name }}
+      server: {{ vsphere_vcenter_server }}
+      region: {{ vsphere_failuredomain_region }}
+      zone: {{ vsphere_failuredomain_zone }}
       topology:
-        datacenter: testDatacenter
-        datastore: /testDatacenter/datastore/testDatastore
-        computeCluster: /testDatacenter/host/testClusters
-        folder: /testDatacenter/vm/testFolder
+        datacenter: {{ vsphere_vcenter_datacenter }}
+        datastore: {{ vsphere_failuredomain_datastore_path }}
+        computeCluster: {{ vsphere_failuredomain_compute_cluster }}
+        folder: {{ vsphere_failuredomain_folder_path }}
         networks:
-        - testNetwork
-      zone: testZone
+        - {{ vsphere_failuredomain_network }}
     apiVIPs: 
 {% set a_vips = api_vips.split(',') %}
 {% for api_vip in a_vips %}

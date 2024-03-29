@@ -9,6 +9,11 @@ assisted: assisted_deployment bell
 # Deploy cluster with agent installer flow
 agent: agent_requirements requirements configure agent_build_installer agent_prepare_release agent_configure agent_create_cluster
 
+agent_vsphere: agent_requirements requirements agent_configure_vsphere agent_build_installer agent_prepare_release agent_configure agent_create_cluster
+
+agent_configure_vsphere:
+	./agent/configure_vsphere.sh
+
 agent_requirements:
 	./agent/01_agent_requirements.sh
 

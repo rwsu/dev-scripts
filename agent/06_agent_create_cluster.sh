@@ -341,6 +341,52 @@ function create_appliance() {
     sudo podman run -it --rm --pull newer --privileged --net=host -v ${asset_dir}:/assets:Z ${APPLIANCE_IMAGE} build --debug-base-ignition
 }
 
+function deploy_vsphere() {
+    set +x
+    export GOVC_URL=$VSPHERE_VCENTER_SERVER
+    export GOVC_USERNAME=$VSPHERE_VCENTER_USERNAME
+    export GOVC_PASSWORD=$VSPHERE_VCENTER_PASSWORD
+    export GOVC_DATACENTER=$VSPHERE_VCENTER_DATACENTER
+    export GOVC_INSECURE=true
+    export GOVC_DATASTORE=$VSPHERE_FAILUREDOMAIN_DATASTORE_PATH
+    export GOVC_CLUSTER=$VSPHERE_FAILUREDOMAIN_COMPUTE_CLUSTER
+    export ISO="iso/${VSPHERE_VCENTER_USERNAME}/agent.x86_64.iso"
+    set -x
+
+    HOSTNAME_ARRAY=()
+    for node in ${AGENT_NODES_HOSTNAMES//,/ }
+    do
+        HOSTNAME_ARRAY+=($node)
+    done
+
+    set +e
+    govc datastore.mkdir -ds $GOVC_DATASTORE "iso/${VSPHERE_VCENTER_USERNAME}" | true
+    # TODO: add datastore.rm directory and agent iso in cleanup
+    govc datastore.upload -ds $GOVC_DATASTORE "${OCP_DIR}/agent.x86_64.iso" $ISO
+    set -e
+
+    i=0
+    for mac in ${AGENT_NODES_MACS//,/ }
+    do
+        govc vm.create -c=8 -m=32000 -disk=100GB -g=rhel8_64Guest -iso=$ISO -net=$VSPHERE_FAILUREDOMAIN_NETWORK -on=false -net.address=$mac ${HOSTNAME_ARRAY[i]}
+        i=$((i+1))
+    done
+
+    for node in ${AGENT_NODES_HOSTNAMES//,/ }
+    do
+        govc vm.change -vm $node -e disk.EnableUUID=TRUE 
+    done
+
+    set +e
+    govc folder.create $VSPHERE_FAILUREDOMAIN_FOLDER_PATH | true
+    set -e
+
+    for node in ${AGENT_NODES_HOSTNAMES//,/ }
+    do
+        govc vm.power -on $node
+    done
+}
+
 asset_dir="${1:-${OCP_DIR}}"
 config_image_dir="${1:-${OCP_DIR}/configimage}"
 openshift_install="$(realpath "${OCP_DIR}/openshift-install")"
@@ -352,8 +398,13 @@ case "${AGENT_E2E_TEST_BOOT_MODE}" in
       disable_automated_installation
     fi
 
-    attach_agent_iso master $NUM_MASTERS
-    attach_agent_iso worker $NUM_WORKERS
+    if [[ "${NODES_PLATFORM}" == "vsphere" ]]; then
+      # TODO: Use AGENT_E2E_TEST_BOOT_MODE in addition to NODES_PLATFORM?
+      deploy_vsphere 
+    else
+      attach_agent_iso master $NUM_MASTERS
+      attach_agent_iso worker $NUM_WORKERS
+    fi
     ;;
 
   "PXE" )

@@ -68,7 +68,7 @@ function get_static_ips_and_macs() {
             AGENT_NODES_HOSTNAMES+=($(printf ${MASTER_HOSTNAME_FORMAT} ${i}))
             cluster_name=${CLUSTER_NAME}_master_${i}
         else
-	    worker_num=$((${i}-$NUM_MASTERS))
+	          worker_num=$((${i}-$NUM_MASTERS))
             AGENT_NODES_HOSTNAMES+=($(printf ${WORKER_HOSTNAME_FORMAT} ${worker_num}))
             cluster_name=${CLUSTER_NAME}_worker_${worker_num}
         fi
@@ -482,9 +482,10 @@ write_pull_secret
 # This is temporary and will go away when https://github.com/nmstate/nmstate is used
 sudo yum install -y nmstate
 
-get_static_ips_and_macs
-
-get_nodes_bmc_info
+if [[ "${NODES_PLATFORM}" != "vsphere" ]]; then
+  get_static_ips_and_macs
+  get_nodes_bmc_info
+fi
 
 if [[ ! -z "${MIRROR_IMAGES}" ]]; then
     if [[ ${MIRROR_COMMAND} == "oc-mirror" ]] && [[ ${AGENT_DEPLOY_MCE} == "true" ]]; then
@@ -492,31 +493,34 @@ if [[ ! -z "${MIRROR_IMAGES}" ]]; then
     fi
 fi
 
-if [[ "${NUM_MASTERS}" > "1" ]]; then
-  if [[ "${AGENT_PLATFORM_TYPE}" == "none" || "${AGENT_PLATFORM_TYPE}" == "external" ]]; then
-    # for platform "none" or "external" both API and INGRESS point to the same
-    # load balancer IP address
-    get_vips
-    configure_dnsmasq ${PROVISIONING_HOST_EXTERNAL_IP} ${PROVISIONING_HOST_EXTERNAL_IP}
-    enable_load_balancer ${API_VIPS} ${PROVISIONING_HOST_EXTERNAL_IP}
-  else
-    set_api_and_ingress_vip
-  fi
-else
-  # For SNO clusters, at least the api dns entry must be set
-  # otherwise oc/openshift-install commands requiring the
-  # kubeconfig will not work properly
-  if [[ "$IP_STACK" = "v4" ]]; then
-    ip=${AGENT_NODES_IPS[0]}
-  else
-    ip=${AGENT_NODES_IPSV6[0]}
-  fi
-  configure_dnsmasq ${ip} ""
-fi
 
-if [[ "${AGENT_PLATFORM_TYPE}" == "external" ]] || [[ "${AGENT_PLATFORM_TYPE}" == "vsphere" ]]; then
-  set_device_mfg master $NUM_MASTERS ${AGENT_PLATFORM_TYPE} ${AGENT_PLATFORM_NAME}
-  set_device_mfg worker $NUM_WORKERS ${AGENT_PLATFORM_TYPE} ${AGENT_PLATFORM_NAME}
+if [[ "${NODES_PLATFORM}" != "vsphere" ]]; then
+  if [[ "${NUM_MASTERS}" > "1" ]]; then
+    if [[ "${AGENT_PLATFORM_TYPE}" == "none" || "${AGENT_PLATFORM_TYPE}" == "external" ]]; then
+      # for platform "none" or "external" both API and INGRESS point to the same
+      # load balancer IP address
+      get_vips
+      configure_dnsmasq ${PROVISIONING_HOST_EXTERNAL_IP} ${PROVISIONING_HOST_EXTERNAL_IP}
+      enable_load_balancer ${API_VIPS} ${PROVISIONING_HOST_EXTERNAL_IP}
+    else
+      set_api_and_ingress_vip
+    fi
+  else
+    # For SNO clusters, at least the api dns entry must be set
+    # otherwise oc/openshift-install commands requiring the
+    # kubeconfig will not work properly
+    if [[ "$IP_STACK" = "v4" ]]; then
+      ip=${AGENT_NODES_IPS[0]}
+    else
+      ip=${AGENT_NODES_IPSV6[0]}
+    fi
+    configure_dnsmasq ${ip} ""
+  fi
+
+  if [[ "${AGENT_PLATFORM_TYPE}" == "external" ]] || [[ "${AGENT_PLATFORM_TYPE}" == "vsphere" ]] && [[ "${NODES_PLATFORM}" != "vsphere" ]]; then
+    set_device_mfg master $NUM_MASTERS ${AGENT_PLATFORM_TYPE} ${AGENT_PLATFORM_NAME}
+    set_device_mfg worker $NUM_WORKERS ${AGENT_PLATFORM_TYPE} ${AGENT_PLATFORM_NAME}
+  fi
 fi
 
 generate_cluster_manifests
