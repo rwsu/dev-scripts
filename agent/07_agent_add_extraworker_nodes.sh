@@ -35,6 +35,11 @@ source $SCRIPTDIR/agent/common.sh
 
 early_deploy_validation
 
+OC_CLIENT=oc
+OC_CLIENT=/home/rwsu/go/src/github.com/openshift/oc/oc
+
+$OC_CLIENT version
+
 function approve_csrs() {
   # approve CSRs for up to 30 mins
   timeout=$((30*60))
@@ -43,7 +48,7 @@ function approve_csrs() {
     pending_csrs=$(oc get csr | grep Pending)
     if [[ ${pending_csrs} != "" ]]; then
       echo "Approving CSRs: $pending_csrs"
-      echo $pending_csrs | cut -d ' ' -f 1 | xargs oc adm certificate approve
+      echo $pending_csrs | cut -d ' ' -f 1 | xargs $OC_CLIENT adm certificate approve
     fi
     elapsed=$((elapsed + 10))
     sleep 10
@@ -67,7 +72,7 @@ fi
 
 case "${AGENT_E2E_TEST_BOOT_MODE}" in
   "ISO" )
-    oc adm node-image create --dir $OCP_DIR/add-node/ --registry-config "${PULL_SECRET_FILE}"
+    $OC_CLIENT adm node-image create --dir $OCP_DIR/add-node/ --registry-config "${PULL_SECRET_FILE}" --loglevel=2
 
     for (( n=0; n<${NUM_EXTRA_WORKERS}; n++ ))
     do
@@ -78,7 +83,7 @@ case "${AGENT_E2E_TEST_BOOT_MODE}" in
     ;;
 
   "PXE" )
-    oc adm node-image create --pxe --dir $OCP_DIR/add-node/ --registry-config "${PULL_SECRET_FILE}"
+    $OC_CLIENT adm node-image create --pxe --dir $OCP_DIR/add-node/ --registry-config "${PULL_SECRET_FILE}"
     # Copy the generated PXE artifacts in the tftp server location
     # The local http server should be running and was started by
     # day 1 installtion.
@@ -100,4 +105,4 @@ set -ex
 
 source "${SCRIPTDIR}/${OCP_DIR}/add-node/extra-workers.env"
 EXTRA_WORKERS_IPS="${EXTRA_WORKERS_IPS%% }"
-oc adm node-image monitor --ip-addresses "${EXTRA_WORKERS_IPS// /,}" --registry-config "${PULL_SECRET_FILE}"
+$OC_CLIENT adm node-image monitor --ip-addresses "${EXTRA_WORKERS_IPS// /,}" --registry-config "${PULL_SECRET_FILE}"

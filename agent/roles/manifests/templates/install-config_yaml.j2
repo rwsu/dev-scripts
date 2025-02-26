@@ -91,6 +91,7 @@ additionalTrustBundle: {{ ca_bundle_crt }}
 {% elif enable_local_registry %}
 additionalTrustBundle: {{ registry_certificate }}
 {% endif %}
+{{ agent_additional_trust_bundle }}
 {% if http_proxy or https_proxy or no_proxy %}
 proxy:
 {% if http_proxy %}

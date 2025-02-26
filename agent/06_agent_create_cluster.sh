@@ -32,7 +32,8 @@ function create_image() {
 }
 
 function create_automated_image() {
-    "${openshift_install}" --dir="${asset_dir}" --log-level=debug agent create image
+    #"${openshift_install}" --dir="${asset_dir}" --log-level=debug agent create image
+    "${openshift_install}" --dir="${asset_dir}" --log-level=debug agent create interactive-disconnected-ignition
 }
 
 function create_factory_image() {

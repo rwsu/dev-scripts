@@ -161,6 +161,8 @@ data:
   value: agent-test
 EOF
 
+  cp /home/rwsu/Downloads/sktelecom/openshift/good/* ${EXTRA_MANIFESTS_PATH}
+
   if [ ! -z "${AGENT_DEPLOY_MCE}" ]; then
     cp ${SCRIPTDIR}/agent/mce/agent_mce_0_*.yaml ${EXTRA_MANIFESTS_PATH}
   fi
@@ -322,6 +324,23 @@ function generate_cluster_manifests() {
     export AGENT_HTTP_PROXY=${HTTP_PROXY}
     export AGENT_HTTPS_PROXY=${HTTPS_PROXY}
     export AGENT_NO_PROXY=${NO_PROXY}
+  fi
+
+function additional_trust_bundle2() {
+  if [[ ! -z "$ADDITIONAL_TRUST_BUNDLE" ]]; then
+    echo "additionalTrustBundle: |"
+    awk '{ print " ", $0 }' "${ADDITIONAL_TRUST_BUNDLE}"
+  fi
+}
+
+
+  if [[ ! -z "ADDITIONAL_TRUST_BUNDLE" ]]; then
+    export AGENT_ADDITIONAL_TRUST_BUNDLE=$(additional_trust_bundle2)
+    export AGENT_HTTP_PROXY=http://192.168.111.1:3128
+    export AGENT_HTTPS_PROXY=http://192.168.111.1:3128
+#    export AGENT_HTTP_PROXY=http://192.168.111.1:8215
+#    export AGENT_HTTPS_PROXY=http://192.168.111.1:8215
+    export AGENT_NO_PROXY=172.22.0.0/24,9999,192.168.111.0/24
   fi
 
   # Create manifests
@@ -597,3 +616,4 @@ generate_cluster_manifests
 generate_extra_cluster_manifests
 
 write_extra_workers_ips
+

@@ -35,6 +35,7 @@ external_subnet_v6_prefixlen: "{{ lookup('env', 'EXTERNAL_SUBNET_V6') | ansible.
 fips_mode: "{{ lookup('env', 'FIPS_MODE') | bool }}"
 http_proxy: "{{ lookup('env', 'AGENT_HTTP_PROXY') }}"
 https_proxy: "{{ lookup('env', 'AGENT_HTTPS_PROXY') }}"
+agent_additional_trust_bundle: "{{ lookup('env', 'AGENT_ADDITIONAL_TRUST_BUNDLE') }}"
 image: "{{ lookup('env', 'IMAGE') }}"
 ip_stack: "{{ lookup('env', 'IP_STACK') }}"
 local_image_url_suffix: "{{ lookup('env', 'LOCAL_IMAGE_URL_SUFFIX') }}"
