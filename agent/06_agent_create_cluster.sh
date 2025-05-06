@@ -87,7 +87,15 @@ function create_agent_iso_no_registry() {
   local asset_dir=${1}
   pushd .
   cd $OPENSHIFT_AGENT_INSTALER_UTILS_PATH/tools/iso_builder
-  ./hack/build-ove-image.sh --pull-secret-file "${PULL_SECRET_FILE}" --release-image-url "${OPENSHIFT_RELEASE_IMAGE}" --ssh-key-file "${SSH_KEY_FILE}" --dir "${asset_dir}"
+
+  echo "RWSU OPENSHIFT_RELEASE_IMAGE $OPENSHIFT_RELEASE_IMAGE"
+  if [[ ! -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE:-}" ]]; then
+        echo "RWSU OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE"
+        ./hack/build-ove-image.sh --pull-secret-file "${PULL_SECRET_FILE}" --release-image-url "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}" --ssh-key-file "${SSH_KEY_FILE}" --dir "${asset_dir}"
+  else
+        ./hack/build-ove-image.sh --pull-secret-file "${PULL_SECRET_FILE}" --release-image-url "${OPENSHIFT_RELEASE_IMAGE}" --ssh-key-file "${SSH_KEY_FILE}" --dir "${asset_dir}"
+  fi
+
   popd
 }
 

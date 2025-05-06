@@ -13,11 +13,6 @@ source $SCRIPTDIR/agent/common.sh
 source $SCRIPTDIR/ocp_install_env.sh
 source $SCRIPTDIR/oc_mirror.sh
 
-# Temporarily skip preparing the custom local release in case of OVE ISO
-if [[ "${AGENT_E2E_TEST_BOOT_MODE}" == "ISO_NO_REGISTRY" ]]; then
-    exit 0
-fi
-
 # To replace an image entry in the openshift release image, set <ENTRYNAME>_LOCAL_REPO so that:
 # - ENTRYNAME matches an uppercase version of the name in the release image with "-" converted to "_" 
 # - The var value must point to an already locally cloned repo
@@ -89,7 +84,7 @@ function build_local_release() {
 
         sudo podman build --network host --authfile $PULL_SECRET_FILE -t ${!IMAGE_VAR} -f $IMAGE_DOCKERFILE --build-arg "${IMAGE_BUILD_ARG}" .
         cd -
-        sudo podman push --tls-verify=false --authfile $PULL_SECRET_FILE ${!IMAGE_VAR} ${!IMAGE_VAR}
+        sudo podman push --retry 3 --tls-verify=false --authfile $PULL_SECRET_FILE ${!IMAGE_VAR} ${!IMAGE_VAR}
         
         FINAL_IMAGE_NAME=${IMAGE_VAR/_LOCAL_REPO}_IMAGE
         FINAL_IMAGE=${!FINAL_IMAGE_NAME:-}
@@ -104,7 +99,7 @@ function build_local_release() {
     # Publish the new release in the local registry
     if [[ ! -z "${MIRROR_IMAGES}" && "${MIRROR_IMAGES,,}" != "false" ]]; then
         sudo podman image build --authfile $PULL_SECRET_FILE -t $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE -f $DOCKERFILE
-        sudo podman push --tls-verify=false --authfile $PULL_SECRET_FILE $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
+        sudo podman push --retry 3 --tls-verify=false --authfile $PULL_SECRET_FILE $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
     fi
 }
 

@@ -27,7 +27,7 @@ function extract_command() {
     extract_dir=$(mktemp --tmpdir -d "installer--XXXXXXXXXX")
     _tmpfiles="$_tmpfiles $extract_dir"
 
-    oc adm release extract --registry-config "${PULL_SECRET_FILE}" --command=$cmd --to "${extract_dir}" ${release_image}
+    oc adm release extract --insecure=true --registry-config "${PULL_SECRET_FILE}" --command=$cmd --to "${extract_dir}" ${release_image}
 
     if [[ $cmd == "oc.rhel8" ]]; then
       cmd="oc"
