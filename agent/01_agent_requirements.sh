@@ -31,10 +31,10 @@ if [[ ${REGISTRY_BACKEND} = "quay" ]]; then
    mkdir -p ${WORKING_DIR}/mirror-registry
    pushd ${WORKING_DIR}/mirror-registry
    # run the exec in this dir as execution-environment.tar is also needed
-   mirror_registry_file=mirror-registry.tar.gz
-   mirror_registry_exec=${mirror_registry_file%%.*}
+   mirror_registry_file=mirror-registry-amd64.tar.gz
+   mirror_registry_exec=mirror-registry
    if [[ ! -f "./${mirror_registry_exec}" ]]; then
-      curl -O -L https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/mirror-registry/latest/${mirror_registry_file}
+      curl -O -L https://mirror.openshift.com/pub/cgw/mirror-registry/latest/${mirror_registry_file}
       tar xzf ${mirror_registry_file}
       chmod +x ${mirror_registry_exec}
       rm -f ${mirror_registry_file}
@@ -73,3 +73,5 @@ if [[ "${AGENT_E2E_TEST_BOOT_MODE}" == "ISO_NO_REGISTRY" ]]; then
 
    clone_agent_installer_utils
 fi
+
+echo "127.0.0.1 virthost.ostest.test.metalkube.org" | sudo tee -a /etc/hosts
