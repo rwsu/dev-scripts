@@ -72,6 +72,7 @@ function mirror_to_file() {
    config=${1}
 
    pushd ${WORKING_DIR}
+   #cp ${config} /tmp/oc-mirror-config
    oc-mirror --v2 --config ${config} file://${WORKING_DIR}
    popd
 }
